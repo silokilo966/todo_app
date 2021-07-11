@@ -8,8 +8,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Todo List',
       debugShowCheckedModeBanner: false,
+      title: 'TodoApp',
       home: TodoList(),
     );
   }
@@ -31,63 +31,82 @@ class _TodoListState extends State<TodoList> {
       ),
       body: _buildTodoList(),
       floatingActionButton: FloatingActionButton(
-        onPressed: _pushTodoScreen,
-        tooltip: 'Add an Item',
-        child: new Icon(Icons.add),
+        onPressed: _showAddTodoItem,
+        child: Icon(Icons.add),
       ),
     );
   }
 
   Widget _buildTodoList() {
-    //This is called when app starts (but doesn't do anything) then called when _addTodoItem is called
     return ListView.builder(
-      //.builder is used instead of ListView when you don't know how many items will be created
       itemCount: _todoItems.length,
-      //Only call itemBuilder if 'i' is less than _todoItems, else itemBuilder will create infinite items
-      itemBuilder: (context, i) {
-        //itemBuilder uses context to keep track of items in list, i is a variable which will be used to count Items that we create
-        return _buildTodoItem(
-            _todoItems[i]); //return _buildTodoItem with _todoItems[i] arguments
+      itemBuilder: (context, index) {
+        return _buildTodoItem(_todoItems[index], index);
       },
     );
   }
 
-  Widget _buildTodoItem(String todoText) {
-    //_buildTodoItem with a string Parameter todoText
-    return ListTile(
-      //ListTile is used to create the single item in a ListView
-      title: Text(todoText), //the text item created using ListTile
-    );
-  }
-
-  void _pushTodoScreen() {
+  void _showAddTodoItem() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) {
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('Add new Task'),
-          ),
-          body: TextField(
-            autofocus: true,
-            onSubmitted: (val) {
-              _addTodoItem(val);
-              Navigator.pop(context);
-            },
-            decoration: InputDecoration(
-              hintText: 'Enter a Task...',
-              contentPadding: EdgeInsets.all(16.0),
+      MaterialPageRoute(
+        builder: (context) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Add Item'),
             ),
-          ),
-        );
-      }),
+            body: TextField(
+              decoration: InputDecoration(hintText: 'Add todo Item'),
+              autofocus: true,
+              onSubmitted: (val) {
+                setState(
+                  () {
+                    _todoItems.add(val);
+                  },
+                );
+                Navigator.pop(context);
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
-  void _addTodoItem(String task) {
-    setState(
-      () {
-        _todoItems.add(task);
+  Widget _buildTodoItem(String index, int i) {
+    return ListTile(
+      trailing: Icon(Icons.done),
+      onTap: () => _promptRemoveItem(i),
+      title: Text(index),
+    );
+  }
+
+  void _promptRemoveItem(int i) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Mark "${_todoItems[i]}" as done?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                _removeItem(i);
+                Navigator.pop(context);
+              },
+              child: Text('Mark as Done!'),
+            )
+          ],
+        );
       },
     );
+  }
+
+  void _removeItem(int i) {
+    setState(() {
+      _todoItems.removeAt(i);
+    });
   }
 }
